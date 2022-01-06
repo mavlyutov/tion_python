@@ -31,17 +31,17 @@ class S3(tion):
         super().__init__(mac)
 
         # S3-specific properties
-        self._timer: bool = False
-        self._time: str = "unknown"
-        self._productivity: int = 0
-        self._fw_version: str = "unknown"
+        self._timer = False
+        self._time = "unknown"
+        self._productivity = 0
+        self._fw_version = "unknown"
 
     @property
-    def pair_command(self) -> bytearray:
+    def pair_command(self):
         return self.create_command(self.command_PAIR)
 
     @property
-    def command_getStatus(self) -> bytearray:
+    def command_getStatus(self):
         return self.create_command(self.command_REQUEST_PARAMS)
 
     def _pair(self):
@@ -49,16 +49,16 @@ class S3(tion):
         self._send_request(self.pair_command)
         _LOGGER.debug("Done!")
 
-    def create_command(self, command: int) -> bytearray:
+    def create_command(self, command: int):
         command_special = 1 if command == self.command_PAIR else 0
         return bytearray([self.command_prefix, command, command_special, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                           self.command_suffix])
 
-    def _collect_message(self, package: bytearray) -> bool:
+    def _collect_message(self, package) -> bool:
         self._data = package
         return True
 
-    def _get_data_from_breezer(self) -> bytearray:
+    def _get_data_from_breezer(self):
         self.have_breezer_state = False
 
         _LOGGER.debug("Collecting data")
@@ -90,7 +90,7 @@ class S3(tion):
 
         return result
 
-    def _decode_response(self, response: bytearray):
+    def _decode_response(self, response):
         _LOGGER.debug("Data is %s", bytes(response).hex())
         try:
             self._fan_speed = int(list("{:02x}".format(response[2]))[1])
@@ -112,7 +112,7 @@ class S3(tion):
         except IndexError as e:
             raise TionException("s3 _decode_response", "Got bad response from Tion '%s': %s while parsing" % (response, str(e)))
 
-    def _generate_model_specific_json(self) -> dict:
+    def _generate_model_specific_json(self):
         return {
             "code": 200,
             "timer": self._timer,
@@ -121,7 +121,7 @@ class S3(tion):
             "fw_version": self._fw_version,
         }
 
-    def _encode_request(self, request: dict) -> bytearray:
+    def _encode_request(self, request: dict):
         new_settings = self.create_command(self.command_SET_PARAMS)
         new_settings[2] = int(request["fan_speed"])
         new_settings[3] = int(request["heater_temp"])
@@ -134,6 +134,6 @@ class S3(tion):
         self._try_write(request)
 
     @property
-    def _dummy_data(self) -> bytearray:
+    def _dummy_data(self):
         return bytearray([0xb3, 0x10, 0x24, 0x14, 0x03, 0x00, 0x15, 0x14, 0x14, 0x8f, 0x00, 0x0c, 0x0a, 0x00, 0x4b,
                           0x0a, 0x00, 0x33, 0x00, 0x5a])
